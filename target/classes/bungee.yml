@@ -1,0 +1,6 @@
+name: MGBungee
+version: 1.0
+main: fr.pandamcbe.mgbungee.Main
+author: PandaMCBE
+depends:
+  - MGVeloDatas

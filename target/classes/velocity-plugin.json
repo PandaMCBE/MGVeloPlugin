@@ -1,0 +1,1 @@
+{"id":"mgnungee","name":"MGBungee","version":"1.0","description":"proxy plugin","url":"fr.pandamcbe","authors":["PandaMCBE"],"dependencies":[{"id":"mymgsql","optional":false}],"main":"fr.pandamcbe.mgbungee.Main"}

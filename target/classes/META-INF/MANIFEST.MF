@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Main-Class: 
+Class-Path: error_prone_annotations-2.10.0.jar netty-buffer-4.0.42.Final
+ .jar byte-buddy-1.4.26.jar cache-api-1.0.0.jar BungeeCord.jar jodd-core
+ -3.7.1.jar MyMGSql-1.0.jar waffle-jna-3.3.0.jar slf4j-api-2.0.9.jar jna
+ -5.13.0.jar jna-platform-5.13.0.jar jackson-core-2.17.1.jar HikariCP-4.
+ 0.3.jar reactor-stream-2.0.8.RELEASE.jar netty-handler-4.0.42.Final.jar
+  reactive-streams-1.0.0.jar mariadb-java-client-3.3.3.jar checker-qual-
+ 3.32.0.jar jackson-annotations-2.9.0.jar redisson-3.2.0.jar netty-commo
+ n-4.0.42.Final.jar netty-codec-4.0.42.Final.jar jodd-bean-3.7.1.jar zer
+ o-allocation-hashing-0.5.jar reactor-core-2.0.8.RELEASE.jar snakeyaml-1
+ .17.jar jackson-dataformat-yaml-2.9.0.jar caffeine-2.9.3.jar netty-tran
+ sport-4.0.42.Final.jar jackson-databind-2.9.0.jar jcl-over-slf4j-2.0.7.
+ jar
+
