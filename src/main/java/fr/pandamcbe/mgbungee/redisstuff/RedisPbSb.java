@@ -3,15 +3,15 @@ package fr.pandamcbe.mgbungee.redisstuff;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import fr.pandamcbe.commons.FFAKitsAccount;
-import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.commons.StatsAccount;
-import fr.pandamcbe.commons.WornAccount;
+import fr.pandamcbe.mgbungee.Main;
+import fr.pandamcbe.mymgsql.MyMGSql;
+import fr.pandamcbe.mymgsql.core.rediscache.CacheProvider;
 import fr.pandamcbe.mymgsql.core.rediscache.CallAccountsFromRedis;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
 import fr.pandamcbe.mymgsql.data.management.redis.RedisAccess;
 import fr.pandamcbe.mymgsql.data.management.redis.RedisMessage;
-import fr.pandamcbe.mymgsql.data.management.savingdatatask.PushMemoryToRedis;
+import org.redisson.api.BatchResult;
 import org.redisson.api.RBatch;
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
@@ -19,21 +19,25 @@ import org.redisson.api.RedissonClient;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class RedisPbSb {
 
     private RedisAccess redisAccess;
-
+    final private CacheProvider cacheProvider = new CacheProvider();
+    final private CallAccountsFromRedis connections;
     public RedisPbSb() {
         this.redisAccess = RedisAccess.INSTANCE;
+        this.connections = MyMGSql.getInstance().callAccountsFromRedis;
     }
 
     public void publishMessage(String channel, String message) {
+
         if (redisAccess == null) {
             System.out.println("Erreur: RedisAccess est null !");
             return;
         }
-
+        Gson gson = new Gson();
         RedissonClient redisson = redisAccess.getRedissonClient();
 
         if (redisson == null) {
@@ -41,7 +45,7 @@ public class RedisPbSb {
             return;
         }
         RTopic topic = redisson.getTopic(channel);
-        topic.publishAsync(message);
+        topic.publishAsync(gson.toJson(message));
     }
 
     public void SubToChannels() {
@@ -52,59 +56,63 @@ public class RedisPbSb {
             return;
         }
 
-        String channel = AllNames.SAVESIGNAL.getName();
+        String channel = AllNames.PROXY.getName();
 
         RTopic topic = redisson.getTopic(channel);
-        topic.addListener(String.class, (channelName, message) ->  handleRedisMessage(message));
+        topic.addListener(String.class, (channelName, message) ->  {
+            Main.getINSTANCE().getLogger().info("Message reçu sur {"+channel+"} : {"+message+"}");
+            CompletableFuture.runAsync(() -> {
+                try {
+                    handleRedisMessage(message, redisAccess);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
 
         System.out.println("Subscription method finished");
     }
 
-    private void handleRedisMessage(String message) {
+    private void handleRedisMessage(String message, RedisAccess redisAccess) {
 //        MyMGSql main = MyMGSql.getInstance();
-        PushMemoryToRedis pushMemoryToRedis = new PushMemoryToRedis();
-        Gson gson = new Gson();
-        System.out.println(message);
-        RedisMessage redisMessage = gson.fromJson(message, RedisMessage.class);
+        CompletableFuture.runAsync(() -> {
 
+            Gson gson = new Gson();
+            RedisMessage redisMessage = gson.fromJson(message, RedisMessage.class);
+            System.out.println("Message Handling...");
             Map<String, String> mainMap = redisMessage.getMainMapAccounts();
             if (!mainMap.isEmpty()) {
                 RBatch rBatch = redisAccess.getRedissonClient().createBatch();
                 for (String uuidString : mainMap.keySet()) {
-                        Type type = new TypeToken<Map<String, JsonObject>>(){}.getType();
-                        Map<String, JsonObject> secondMap = gson.fromJson(mainMap.get(uuidString), type);
-                        UUID uuid = UUID.fromString(uuidString);
-//                        if (secondMap.isEmpty()) continue;
+                    Type type = new TypeToken<Map<String, JsonObject>>() {
+                    }.getType();
+                    Map<String, JsonObject> secondMap = gson.fromJson(mainMap.get(uuidString), type);
+                    System.out.println("Debugging : " + secondMap.entrySet());
+                    UUID uuid = UUID.fromString(uuidString);
+                    if (secondMap.isEmpty()) return;
+                    secondMap.keySet().forEach(name -> pushAccounts(rBatch, uuid, name, secondMap.get(name)));
+                    System.out.println("ça marche ?");
 
-                        for (String accountNames : secondMap.keySet()) {
-                            String newAccountName = CallAccountsFromRedis.ifContainsCategory(accountNames);
-                            AllNames allNames = AllNames.fromName(newAccountName);
-                            if (allNames != null)
-                                switch (allNames) {
-                                    case STATSPOJO:
-                                        String[] serverName = accountNames.split(AllNames.SPLITCG.getName());
-                                        StatsAccount statsAccount = gson.fromJson(secondMap.get(accountNames), StatsAccount.class);
-                                        pushMemoryToRedis.pushMStats(rBatch, uuid, statsAccount, serverName[1]);
-                                        break;
-                                    case WORNPOJO:
-                                        WornAccount wornAccount = gson.fromJson(secondMap.get(accountNames), WornAccount.class);
-                                        pushMemoryToRedis.pushMWorn(rBatch, uuid, wornAccount);
-                                        break;
-                                    case FFAKITSPOJO:
-                                        FFAKitsAccount ffaKitsAccount = gson.fromJson(secondMap.get(accountNames), FFAKitsAccount.class);
-                                        pushMemoryToRedis.pushMKits(rBatch, uuid, ffaKitsAccount);
-                                        break;
-                                    case PROFILPOJO:
-                                        ProfilAccount profilAccount = gson.fromJson(secondMap.get(accountNames), ProfilAccount.class);
-                                        pushMemoryToRedis.pushMProfil(rBatch, uuid, profilAccount);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                        }
                 }
-                rBatch.execute();
+                System.out.println("Rbatch ?");
+                BatchResult<?> result = rBatch.execute();
+                System.out.println(result.getResponses());
+
             }
+        });
+
+    }
+
+    public void pushAccounts(RBatch rBatch, UUID uuid, String name, Object account){
+        if(CallAccountsFromRedis.ifContainsCategory(name).equalsIgnoreCase(AllNames.STATSPOJO.getName())) {
+            String[] serverName = name.split(AllNames.SPLITCG.getName());
+            StatsAccount statsAccount = (StatsAccount) account;
+            StatsAccount stats = (StatsAccount) connections.getAccount(uuid, AllNames.statsKey(serverName[1]));
+            stats.setKills(stats.getKills()+ statsAccount.getKills());
+            stats.setKillstreaks(stats.getKillstreaks() + statsAccount.getKillstreaks());
+        } else {
+            cacheProvider.sendRBucketAccountAsyncToRedis(rBatch, name, uuid, account);
+        }
 
     }
 }

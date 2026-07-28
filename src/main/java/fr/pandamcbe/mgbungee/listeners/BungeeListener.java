@@ -51,8 +51,8 @@ public class BungeeListener {
         Player p = event.getPlayer();
         UUID uuid = p.getUniqueId();
         ProxyServer server = MyMGSql.getInstance().server;
-        server.getScheduler().buildTask(Main.getINSTANCE(), (selfTask) -> {
-            cancelTask(uuid);
+        //Revoir le fonctionnement
+        ScheduledTask task = server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             Optional<Player> playerOptional = Main.INSTANCE.server.getPlayer(uuid);
             if (!playerOptional.isPresent()) {
                 PushRedisToDatabase pushRedisToDatabase = new PushRedisToDatabase(p);
@@ -60,8 +60,9 @@ public class BungeeListener {
                 Main.getINSTANCE().redisMuteManager.UpdateMute(p);
             }
 
-           isConnectedConditon.put(uuid, selfTask);
         }).delay(Duration.ofMinutes(5L)).schedule();
+        isConnectedConditon.put(uuid, task);
+
     }
 
     private void cancelTask (UUID uuid){

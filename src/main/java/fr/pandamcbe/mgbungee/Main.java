@@ -69,7 +69,6 @@ public final class Main{
         redisPbSb.SubToChannels();
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
-        savingDatas.saveIntoRedis();
         loadOnlineServerNames();
         task = new PubliciteTask(this);
         task.startTask();
