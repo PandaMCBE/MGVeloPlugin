@@ -9,6 +9,7 @@ import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.mgbungee.Main;
@@ -32,6 +33,8 @@ public class BungeeListener {
     public void onJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
         ProxyServer server = MyMGSql.getInstance().server;
+        Integer total = server.getAllPlayers().size();
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), total);
         server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             try {
                 LoadRedisAccounts.LoadTheseRedisAccounts(player);
@@ -47,11 +50,36 @@ public class BungeeListener {
     }
 
     @Subscribe
+    public void onBackendJoin(ServerConnectedEvent event) {
+        RegisteredServer targetServer = event.getServer();
+
+        Map<String, Integer> map = Main.getINSTANCE().networkState.getServersPlayerCount();
+
+        String targetName = targetServer.getServerInfo().getName();
+        Integer targetCount = targetServer.getPlayersConnected().size();
+        map.put(targetName, targetCount);
+
+        if(event.getPreviousServer().isPresent()) {
+            RegisteredServer previousServer = event.getPreviousServer().get();
+            String previousName = previousServer.getServerInfo().getName();
+            Integer previousCount = previousServer.getPlayersConnected().size();
+            map.put(previousName, previousCount);
+        }
+
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), map);
+    }
+
+
+
+    @Subscribe
     public void onQuit(DisconnectEvent event) {
         Player p = event.getPlayer();
         UUID uuid = p.getUniqueId();
         ProxyServer server = MyMGSql.getInstance().server;
-        //Revoir le fonctionnement
+        Integer total = server.getAllPlayers().size();
+        Map<String, Integer> map = Main.getINSTANCE().networkState.getServersPlayerCount();
+        map.put(AllNames.PROXY.getName(), total);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), map);
         ScheduledTask task = server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             Optional<Player> playerOptional = Main.INSTANCE.server.getPlayer(uuid);
             if (!playerOptional.isPresent()) {

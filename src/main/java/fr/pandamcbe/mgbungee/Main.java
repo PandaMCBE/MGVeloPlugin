@@ -23,11 +23,13 @@ import fr.pandamcbe.mgbungee.redisstuff.MuteManager;
 import fr.pandamcbe.mgbungee.redisstuff.RedisPbSb;
 import fr.pandamcbe.mgbungee.tasks.PubliciteTask;
 import fr.pandamcbe.mgbungee.tasks.SavingDatas;
-import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
+import fr.pandamcbe.mymgsql.MyMGSql;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @Plugin(id = "mgnungee", name = "MGBungee", version = "1.0",
@@ -47,6 +49,7 @@ public final class Main{
     final public SQLBanManager banManager = new SQLBanManager();
     final public SQLBanIpManager banIpManager = new SQLBanIpManager();
     public RedisPbSb redisPbSb;
+    public NetworkState networkState;
     public final ProxyServer server;
     private final Logger logger;
     private final SavingDatas savingDatas = new SavingDatas();
@@ -67,9 +70,10 @@ public final class Main{
         CommandsInitialization();
         redisPbSb = new RedisPbSb();
         redisPbSb.SubToChannels();
+        networkState = new NetworkState();
+        networkState.setServerNames(MyMGSql.getInstance().getOnlineServerNames());
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
-        loadOnlineServerNames();
         task = new PubliciteTask(this);
         task.startTask();
 
@@ -126,11 +130,4 @@ public final class Main{
         return logger;
     }
 
-    public void loadOnlineServerNames(){
-        serverNames = new HashSet<>();
-        serverNames.add(AllNames.CJFFA.getName());
-        serverNames.add(AllNames.DUELS.getName());
-        serverNames.add(AllNames.PFTSHOT.getName());
-        serverNames.add(AllNames.LOBBY.getName());
-    }
 }

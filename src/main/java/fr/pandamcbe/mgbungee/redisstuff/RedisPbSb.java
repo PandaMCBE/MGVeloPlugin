@@ -31,7 +31,7 @@ public class RedisPbSb {
         this.connections = MyMGSql.getInstance().callAccountsFromRedis;
     }
 
-    public void publishMessage(String channel, String message) {
+    public void publishMessage(String channel, Object message) {
 
         if (redisAccess == null) {
             System.out.println("Erreur: RedisAccess est null !");

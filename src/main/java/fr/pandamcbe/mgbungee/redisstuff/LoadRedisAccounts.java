@@ -26,7 +26,9 @@ public class LoadRedisAccounts {
         Rbucketkeys.add(AllNames.PROFILKEY.getName());
         Rbucketkeys.add(AllNames.WORNKEY.getName());
         Rbucketkeys.add(AllNames.FFAKITSKEY.getName());
-        MyMGSql.getInstance().getOnlineServerNames().forEach(name -> Rbucketkeys.add(AllNames.statsKey(name)));
+        MyMGSql.getInstance().getOnlineServerNames().forEach(name -> { if(name.equalsIgnoreCase(AllNames.LOBBY.getName()))
+            Rbucketkeys.add(AllNames.statsKey(name));
+        });
         Rbucketkeys.forEach(keysName -> accounts.put(keysName, cacheProvider.getRBucketAccountFromRedis(redisAccess, keysName, uuid)));
 
         final PenaltyAccount penalityAccount = (PenaltyAccount) connections.getAccount(uuid, AllNames.PENALTY.getName());
