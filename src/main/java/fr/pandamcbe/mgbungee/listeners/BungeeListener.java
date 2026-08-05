@@ -15,7 +15,8 @@ import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.mgbungee.Main;
 import fr.pandamcbe.mgbungee.redisstuff.LoadRedisAccounts;
 import fr.pandamcbe.mymgsql.MyMGSql;
-import fr.pandamcbe.mymgsql.core.rediscache.CallAccountsFromRedis;
+import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
+import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
 import fr.pandamcbe.mymgsql.data.management.exceptions.AccountNotFoundException;
 import fr.pandamcbe.mymgsql.data.management.savingdatatask.PushRedisToDatabase;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 public class BungeeListener {
     private final Map<UUID, ScheduledTask> isConnectedConditon = new HashMap<>();
+    private final RedisAccountsManager redisAccountsManager = new RedisAccountsManager();
     @Subscribe
     public void onJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
@@ -40,7 +42,6 @@ public class BungeeListener {
         server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             try {
                 LoadRedisAccounts.LoadTheseRedisAccounts(player);
-                MyMGSql.getInstance().callAccountsFromRedis.sendEveryCosmeAccounts(player);
             } catch (SQLException | AccountNotFoundException e) {
                 System.err.println(e.getMessage());
             }
@@ -180,8 +181,7 @@ public class BungeeListener {
                     } catch (AccountNotFoundException e) {
                         System.err.println(e.getMessage());
                     }
-            CallAccountsFromRedis connections = MyMGSql.getInstance().callAccountsFromRedis;
-            ProfilAccount profilAccount = (ProfilAccount) connections.getAccount(sender.getUniqueId(), AllNames.PROFILKEY.getName());
+            ProfilAccount profilAccount = (ProfilAccount) redisAccountsManager.getProfilAccount(sender.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
             if(profilAccount.getC_visibility() == 0) {
                 sender.sendMessage(Main.mm("<red>Tu as désactivé ton chat !</red>"));
             }

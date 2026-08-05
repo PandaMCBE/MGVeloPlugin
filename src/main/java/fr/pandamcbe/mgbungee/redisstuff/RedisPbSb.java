@@ -5,9 +5,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import fr.pandamcbe.commons.StatsAccount;
 import fr.pandamcbe.mgbungee.Main;
-import fr.pandamcbe.mymgsql.MyMGSql;
-import fr.pandamcbe.mymgsql.core.rediscache.CacheProvider;
-import fr.pandamcbe.mymgsql.core.rediscache.CallAccountsFromRedis;
+import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
+import fr.pandamcbe.mymgsql.core.rediscache.RedisInteractionManager;
+import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
 import fr.pandamcbe.mymgsql.data.management.redis.RedisAccess;
 import fr.pandamcbe.mymgsql.data.management.redis.RedisMessage;
@@ -17,19 +17,16 @@ import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class RedisPbSb {
 
-    private RedisAccess redisAccess;
-    final private CacheProvider cacheProvider = new CacheProvider();
-    final private CallAccountsFromRedis connections;
-    public RedisPbSb() {
-        this.redisAccess = RedisAccess.INSTANCE;
-        this.connections = MyMGSql.getInstance().callAccountsFromRedis;
-    }
+    final private RedisAccountsManager redisAccountsManager = new RedisAccountsManager();
+    final private RedisInteractionManager redisInteractionManager = new RedisInteractionManager();
+    private final RedisAccess redisAccess = redisInteractionManager.getRedisAccess();
 
     public void publishMessage(String channel, Object message) {
 
@@ -104,14 +101,14 @@ public class RedisPbSb {
     }
 
     public void pushAccounts(RBatch rBatch, UUID uuid, String name, Object account){
-        if(CallAccountsFromRedis.ifContainsCategory(name).equalsIgnoreCase(AllNames.STATSPOJO.getName())) {
+        if(RedisAccountsManager.ifContainsCategory(name).equalsIgnoreCase(AccountType.GAMESSTATS.getKeyPrefix())) {
             String[] serverName = name.split(AllNames.SPLITCG.getName());
             StatsAccount statsAccount = (StatsAccount) account;
-            StatsAccount stats = (StatsAccount) connections.getAccount(uuid, AllNames.statsKey(serverName[1]));
+            StatsAccount stats = (StatsAccount) redisAccountsManager.getStatsAccount(uuid, AccountType.statsKey(serverName[1]));
             stats.setKills(stats.getKills()+ statsAccount.getKills());
             stats.setKillstreaks(stats.getKillstreaks() + statsAccount.getKillstreaks());
         } else {
-            cacheProvider.sendRBucketAccountAsyncToRedis(rBatch, name, uuid, account);
+            redisInteractionManager.sendRBucketAsyncToRedis(rBatch, name+AllNames.SEPMARK.getName()+uuid.toString(), account, Duration.ofHours(2));
         }
 
     }

@@ -5,8 +5,8 @@ import fr.pandamcbe.commons.PenaltyAccount;
 import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.mgbungee.Main;
 import fr.pandamcbe.mgbungee.bans.TimeUnit;
-import fr.pandamcbe.mymgsql.core.rediscache.CacheProvider;
-import fr.pandamcbe.mymgsql.core.rediscache.CallAccountsFromRedis;
+import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
+import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
 import fr.pandamcbe.mymgsql.data.management.exceptions.AccountNotFoundException;
 import fr.pandamcbe.mymgsql.data.management.sql.databaseconnexion.DbManager;
@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public class MuteManager {
 
-    private CallAccountsFromRedis connections = new CallAccountsFromRedis();
+    private RedisAccountsManager connections = new RedisAccountsManager();
 
     public void mute(Player target, long endInSeconds, String comment){
 
@@ -30,21 +30,20 @@ public class MuteManager {
                     if(isMutedInGame(target) == 1)return;
 
                     final PenaltyAccount DEFAULT_PENALITY = new PenaltyAccount(0, UUID.randomUUID(), -1L, "T'as GUEULE !");
-                    final CacheProvider cacheProvider = new CacheProvider();
                     final PenaltyAccount penalityAccount= DEFAULT_PENALITY.clone();
-                    final ProfilAccount profilAccount = (ProfilAccount) connections.getAccount(target.getUniqueId(), AllNames.PROFILKEY.getName());
+                    final ProfilAccount profilAccount = (ProfilAccount) connections.getProfilAccount(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
                     long endToMillis=endInSeconds*1000L;
                     long end=endToMillis+System.currentTimeMillis();
                     if(endInSeconds==-1L)
                         end=-1L;
 
                     profilAccount.setIsMuted(1);
-                    connections.sendAccount(target.getUniqueId(), AllNames.PROFILKEY.getName(), penalityAccount);
+                    connections.sendAccountToRedisType(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix(), penalityAccount);
                     penalityAccount.setUuid(target.getUniqueId());
                     penalityAccount.setMute_end(end);
                     penalityAccount.setComment(comment);
 
-                    cacheProvider.sendRBucketAccountToRedis(connections.getRedisAccess(), AllNames.PENALTY.getName(), target.getUniqueId(), penalityAccount);
+                    connections.sendAccountToRedisType(target.getUniqueId(), AccountType.PENALITIES.getKeyPrefix(), penalityAccount);
 
                     final String sqlCreateMute = "INSERT INTO " + AllNames.PLAYERS_MUTED.getName() + " (" + AllNames.UUID_PLAYER.getName() + ", " + AllNames.END.getName() + ", " + AllNames.COMMENT.getName() + ") VALUES (?, ?, ?)";
                     try (final Connection connection = DbManager.MGDB.getDatabaseAccess().getConnection();
@@ -109,7 +108,7 @@ public class MuteManager {
 
     public Integer isMutedInGame(Player target)throws AccountNotFoundException{
 //target=BungeeCord.getInstance().getPlayer(uuid);
-        final ProfilAccount profilAccount = (ProfilAccount) connections.getAccount(target.getUniqueId(), AllNames.PROFILKEY.getName());
+        final ProfilAccount profilAccount = (ProfilAccount) connections.getProfilAccount(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
 
         return profilAccount.getIsMuted();
     }
@@ -118,9 +117,9 @@ public class MuteManager {
 //target=ProxyServer.getInstance().getPlayer(uuid);
         if(isMutedInGame(target) == 0)return;
 
-        final ProfilAccount profilAccount = (ProfilAccount) connections.getAccount(target.getUniqueId(), AllNames.PROFILKEY.getName());
+        final ProfilAccount profilAccount = (ProfilAccount) connections.getProfilAccount(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
         profilAccount.setIsMuted(0);
-        connections.sendAccount(target.getUniqueId(), AllNames.PROFILKEY.getName(), profilAccount);
+        connections.sendAccountToRedisType(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix(), profilAccount);
     }
 
     public void checkDuration(Player target)throws AccountNotFoundException{
@@ -136,7 +135,7 @@ public class MuteManager {
 
         if(isMutedInGame(target) == 0)return 0L;
 
-        final PenaltyAccount account= (PenaltyAccount) connections.getAccount(target.getUniqueId(), AllNames.PENALTY.getName());
+        final PenaltyAccount account= (PenaltyAccount) connections.getProfilAccount(target.getUniqueId(), AccountType.PENALITIES.getKeyPrefix());
         return account.getMute_end();
     }
 
@@ -144,7 +143,7 @@ public class MuteManager {
 
         if(isMutedInGame(target) == 0)return"mute";
 
-        final PenaltyAccount penalityAccount= (PenaltyAccount) connections.getAccount(target.getUniqueId(), AllNames.PENALTY.getName());
+        final PenaltyAccount penalityAccount= (PenaltyAccount) connections.getProfilAccount(target.getUniqueId(), AccountType.PENALITIES.getKeyPrefix());
 
         return penalityAccount.getComment();
     }
@@ -188,7 +187,7 @@ public class MuteManager {
         final String sqlUpdateMute = "UPDATE " + AllNames.PLAYERS_MUTED.getName() + " SET " + AllNames.END.getName() + " = ?, " + AllNames.COMMENT.getName() + " = ? WHERE " + AllNames.UUID_PLAYER.getName() + " = ?";
         try (final Connection connection = DbManager.MGDB.getDatabaseAccess().getConnection();
              final PreparedStatement psUpdateMute = connection.prepareStatement(sqlUpdateMute)) {
-            final PenaltyAccount penalityAccount = (PenaltyAccount) connections.getAccount(player.getUniqueId(), AllNames.PENALTY.getName());
+            final PenaltyAccount penalityAccount = (PenaltyAccount) connections.getProfilAccount(player.getUniqueId(), AccountType.PENALITIES.getKeyPrefix());
 
             if (isMuted(player.getUniqueId())) { // Pour mettre à jour si le joueur était déjà mute avant de join
                 psUpdateMute.setLong(1, penalityAccount.getMute_end());

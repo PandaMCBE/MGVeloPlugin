@@ -6,9 +6,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.mgbungee.Main;
-import fr.pandamcbe.mymgsql.MyMGSql;
-import fr.pandamcbe.mymgsql.core.rediscache.CallAccountsFromRedis;
-import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
+import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
+import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,8 +40,8 @@ public class MsgCommand implements SimpleCommand {
             } else {
                 final Player playerDest = Main.INSTANCE.server.getPlayer(dest).get();
                 proxyServer.getScheduler().buildTask(Main.INSTANCE, ()-> {
-                    final CallAccountsFromRedis connections = MyMGSql.INSTANCE.callAccountsFromRedis;
-                    final ProfilAccount account = (ProfilAccount) connections.getAccount(playerDest.getUniqueId(), AllNames.PROFILKEY.getName());
+                    final RedisAccountsManager connections = new RedisAccountsManager();
+                    final ProfilAccount account = (ProfilAccount) connections.getProfilAccount(playerDest.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
                     String msg = "";
 
                     for(int i = 1; i != args.length; i++) msg += args[i] + " ";

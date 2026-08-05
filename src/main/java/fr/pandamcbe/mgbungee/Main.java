@@ -27,6 +27,7 @@ import fr.pandamcbe.mymgsql.MyMGSql;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +73,7 @@ public final class Main{
         redisPbSb.SubToChannels();
         networkState = new NetworkState();
         networkState.setServerNames(MyMGSql.getInstance().getOnlineServerNames());
+        MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List", networkState.getServerNames(), Duration.ZERO);
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
         task = new PubliciteTask(this);
