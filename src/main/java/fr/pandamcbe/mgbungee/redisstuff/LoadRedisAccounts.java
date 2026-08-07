@@ -20,10 +20,11 @@ public class LoadRedisAccounts {
         RedisInteractionManager redisInteractionManager = new RedisInteractionManager();
         UUID uuid = player.getUniqueId();
 
-        connections.ProfilAccountNullChecking(uuid, AccountType.PROFIL.getKeyPrefix());
-        connections.ShopAccountNullChecking(uuid, AccountType.COSMEWORN.getKeyPrefix(), AccountType.cosmeKey(AllNames.SOUND_ID.getName()));
-        MyMGSql.getInstance().getOnlineServerNames().forEach(name -> { if(name.equalsIgnoreCase(AllNames.LOBBY.getName()))
-            connections.ShopAccountNullChecking(uuid, AccountType.statsKey(name));
+//        connections.ProfilAccountNullChecking(uuid, AccountType.PROFIL.getKeyPrefix());
+        connections.ShopAccountNullChecking(uuid, AccountType.cosmeKey(AllNames.SOUND_ID.getName()));
+
+        MyMGSql.getInstance().getOnlineServerNames().forEach(name -> { if(!name.equalsIgnoreCase(AllNames.LOBBY.getName()))
+            connections.StatsAccountNullChecking(uuid, AccountType.statsKey(name));
         });
         final PenaltyAccount penalityAccount = (PenaltyAccount) connections.getProfilAccount(uuid, AccountType.PENALITIES.getKeyPrefix());
 

@@ -36,8 +36,9 @@ public class BungeeListener {
         Player player = event.getPlayer();
 
         ProxyServer server = MyMGSql.getInstance().server;
-        Integer total = server.getAllPlayers().size();
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), total);
+        int total = server.getAllPlayers().size();
+        Main.getINSTANCE().networkState.setTotalPlayers(total);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
 
         server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             try {
@@ -46,7 +47,6 @@ public class BungeeListener {
                 System.err.println(e.getMessage());
             }
         }).schedule();
-
         if(isConnectedConditon.get(player.getUniqueId()) != null){
             cancelTask(player.getUniqueId());
         }
@@ -69,7 +69,7 @@ public class BungeeListener {
             map.put(previousName, previousCount);
         }
 
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), map);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
     }
 
 
@@ -80,10 +80,9 @@ public class BungeeListener {
         UUID uuid = p.getUniqueId();
 
         ProxyServer server = MyMGSql.getInstance().server;
-        Integer total = server.getAllPlayers().size();
-        Map<String, Integer> map = Main.getINSTANCE().networkState.getServersPlayerCount();
-        map.put(AllNames.PROXY.getName(), total);
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), map);
+        int total = server.getAllPlayers().size();
+        Main.getINSTANCE().networkState.setTotalPlayers(total);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
 
 
         ScheduledTask task = server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
