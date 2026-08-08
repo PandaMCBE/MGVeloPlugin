@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import fr.pandamcbe.commons.StatsAccount;
-import fr.pandamcbe.mgbungee.Main;
 import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
 import fr.pandamcbe.mymgsql.core.rediscache.RedisInteractionManager;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
@@ -57,7 +56,6 @@ public class RedisPbSb {
 
         RTopic topic = redisson.getTopic(channel);
         topic.addListener(String.class, (channelName, message) ->  {
-            Main.getINSTANCE().getLogger().info("Message reçu sur {"+channel+"} : {"+message+"}");
             CompletableFuture.runAsync(() -> {
                 try {
                     handleRedisMessage(message, redisAccess);

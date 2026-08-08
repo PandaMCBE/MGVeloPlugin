@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.mgbungee.Main;
+import fr.pandamcbe.mgbungee.NetworkState;
 import fr.pandamcbe.mgbungee.redisstuff.LoadRedisAccounts;
 import fr.pandamcbe.mymgsql.MyMGSql;
 import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
@@ -31,14 +32,19 @@ import java.util.UUID;
 public class BungeeListener {
     private final Map<UUID, ScheduledTask> isConnectedConditon = new HashMap<>();
     private final RedisAccountsManager redisAccountsManager = new RedisAccountsManager();
+    private NetworkState networkState = Main.getINSTANCE().networkState;
     @Subscribe
     public void onJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
 
         ProxyServer server = MyMGSql.getInstance().server;
         int total = server.getAllPlayers().size();
-        Main.getINSTANCE().networkState.setTotalPlayers(total);
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
+        networkState.setTotalPlayers(total);
+        if(networkState.getServersPlayerCount().isEmpty()) {
+            Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), Main.getINSTANCE().getOnlineServersPlayersCount());
+        }
+
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
 
         server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             try {
@@ -56,7 +62,7 @@ public class BungeeListener {
     public void onBackendJoin(ServerConnectedEvent event) {
         RegisteredServer targetServer = event.getServer();
 
-        Map<String, Integer> map = Main.getINSTANCE().networkState.getServersPlayerCount();
+        Map<String, Integer> map = networkState.getServersPlayerCount();
 
         String targetName = targetServer.getServerInfo().getName();
         Integer targetCount = targetServer.getPlayersConnected().size();
@@ -69,7 +75,7 @@ public class BungeeListener {
             map.put(previousName, previousCount);
         }
 
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
     }
 
 
@@ -81,8 +87,8 @@ public class BungeeListener {
 
         ProxyServer server = MyMGSql.getInstance().server;
         int total = server.getAllPlayers().size();
-        Main.getINSTANCE().networkState.setTotalPlayers(total);
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.PROXY.getName(), Main.getINSTANCE().networkState);
+        networkState.setTotalPlayers(total);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
 
 
         ScheduledTask task = server.getScheduler().buildTask(Main.getINSTANCE(), () -> {

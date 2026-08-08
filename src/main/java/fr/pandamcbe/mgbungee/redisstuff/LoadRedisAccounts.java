@@ -20,8 +20,8 @@ public class LoadRedisAccounts {
         RedisInteractionManager redisInteractionManager = new RedisInteractionManager();
         UUID uuid = player.getUniqueId();
 
-//        connections.ProfilAccountNullChecking(uuid, AccountType.PROFIL.getKeyPrefix());
-        connections.ShopAccountNullChecking(uuid, AccountType.cosmeKey(AllNames.SOUND_ID.getName()));
+        connections.ProfilAccountNullChecking(uuid, AccountType.PROFIL.getKeyPrefix());
+        connections.ShopAccountNullChecking(uuid, AccountType.COSMEWORN.getKeyPrefix(), AccountType.CJFFAKITS.getKeyPrefix(), AccountType.cosmeKey(AllNames.SOUND_ID.getName()));
 
         MyMGSql.getInstance().getOnlineServerNames().forEach(name -> { if(!name.equalsIgnoreCase(AllNames.LOBBY.getName()))
             connections.StatsAccountNullChecking(uuid, AccountType.statsKey(name));

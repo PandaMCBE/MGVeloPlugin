@@ -12,6 +12,7 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import fr.pandamcbe.mgbungee.commands.general.RulesCmd;
 import fr.pandamcbe.mgbungee.commands.penalities.*;
 import fr.pandamcbe.mgbungee.commands.privatemessage.MsgCommand;
@@ -67,7 +68,6 @@ public final class Main{
         INSTANCE = this;
         // Do some operation demanding access to the Velocity API here.
         // For instance, we could register an event:
-        server.getEventManager().register(this, new BungeeListener());
         CommandsInitialization();
         redisPbSb = new RedisPbSb();
         redisPbSb.SubToChannels();
@@ -75,6 +75,7 @@ public final class Main{
         MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List",MyMGSql.getInstance().getOnlineServerNames() , Duration.ZERO);
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
+        server.getEventManager().register(this, new BungeeListener());
         task = new PubliciteTask(this);
         task.startTask();
 
@@ -131,4 +132,13 @@ public final class Main{
         return logger;
     }
 
+    public NetworkState getOnlineServersPlayersCount(){
+        for(String name : MyMGSql.getInstance().getOnlineServerNames()) {
+            if(server.getServer(name).isPresent()) {
+                RegisteredServer registeredServer = server.getServer(name).get();
+                networkState.getServersPlayerCount().put(name, registeredServer.getPlayersConnected().size());
+            }
+        }
+        return networkState;
+    }
 }
