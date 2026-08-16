@@ -38,13 +38,6 @@ public class BungeeListener {
         Player player = event.getPlayer();
 
         ProxyServer server = MyMGSql.getInstance().server;
-        int total = server.getAllPlayers().size();
-        networkState.setTotalPlayers(total);
-        if(networkState.getServersPlayerCount().isEmpty()) {
-            Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), Main.getINSTANCE().getOnlineServersPlayersCount());
-        }
-
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
 
         server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             try {
@@ -56,6 +49,14 @@ public class BungeeListener {
         if(isConnectedConditon.get(player.getUniqueId()) != null){
             cancelTask(player.getUniqueId());
         }
+
+        int total = server.getAllPlayers().size();
+        networkState.setTotalPlayers(total);
+        if(networkState.getServersPlayerCount().isEmpty()) {
+            Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), Main.getINSTANCE().getOnlineServersPlayersCount());
+        }
+
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
     }
 
     @Subscribe
@@ -78,18 +79,12 @@ public class BungeeListener {
         Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
     }
 
-
-
     @Subscribe
     public void onQuit(DisconnectEvent event) {
         Player p = event.getPlayer();
         UUID uuid = p.getUniqueId();
 
         ProxyServer server = MyMGSql.getInstance().server;
-        int total = server.getAllPlayers().size();
-        networkState.setTotalPlayers(total);
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
-
 
         ScheduledTask task = server.getScheduler().buildTask(Main.getINSTANCE(), () -> {
             Optional<Player> playerOptional = Main.INSTANCE.server.getPlayer(uuid);
@@ -101,6 +96,10 @@ public class BungeeListener {
 
         }).delay(Duration.ofMinutes(5L)).schedule();
         isConnectedConditon.put(uuid, task);
+
+        int total = server.getAllPlayers().size();
+        networkState.setTotalPlayers(total);
+        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
 
     }
 

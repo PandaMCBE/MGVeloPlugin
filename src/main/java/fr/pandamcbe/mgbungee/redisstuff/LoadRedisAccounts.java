@@ -28,7 +28,6 @@ public class LoadRedisAccounts {
         });
         final PenaltyAccount penalityAccount = (PenaltyAccount) connections.getProfilAccount(uuid, AccountType.PENALITIES.getKeyPrefix());
 
-
         if (Main.INSTANCE.redisMuteManager.isMuted(uuid))
             redisInteractionManager.sendRBucketToRedis(AccountType.PENALITIES.getKeyPrefix(), penalityAccount, Duration.ZERO);
     }
