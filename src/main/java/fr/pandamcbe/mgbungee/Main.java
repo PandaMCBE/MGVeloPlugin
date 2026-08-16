@@ -73,6 +73,7 @@ public final class Main{
         redisPbSb.SubToChannels();
         networkState = new NetworkState();
         MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List",MyMGSql.getInstance().getOnlineServerNames() , Duration.ZERO);
+        networkState.setServerNames(MyMGSql.getInstance().getOnlineServerNames());
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
         server.getEventManager().register(this, new BungeeListener());
@@ -132,13 +133,12 @@ public final class Main{
         return logger;
     }
 
-    public NetworkState getOnlineServersPlayersCount(){
+    public void getOnlineServersPlayersCount(){
         for(String name : MyMGSql.getInstance().getOnlineServerNames()) {
             if(server.getServer(name).isPresent()) {
                 RegisteredServer registeredServer = server.getServer(name).get();
                 networkState.getServersPlayerCount().put(name, registeredServer.getPlayersConnected().size());
             }
         }
-        return networkState;
     }
 }

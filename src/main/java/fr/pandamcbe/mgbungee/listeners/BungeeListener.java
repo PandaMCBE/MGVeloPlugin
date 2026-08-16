@@ -53,7 +53,7 @@ public class BungeeListener {
         int total = server.getAllPlayers().size();
         networkState.setTotalPlayers(total);
         if(networkState.getServersPlayerCount().isEmpty()) {
-            Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), Main.getINSTANCE().getOnlineServersPlayersCount());
+            Main.getINSTANCE().getOnlineServersPlayersCount();
         }
 
         Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
