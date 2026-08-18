@@ -4,17 +4,13 @@ package fr.pandamcbe.mgbungee.commands.penalities;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
-import fr.pandamcbe.mgbungee.bans.TimeUnit;
 import fr.pandamcbe.mgbungee.Main;
-
+import fr.pandamcbe.mgbungee.bans.TimeUnit;
 import fr.pandamcbe.mymgsql.data.management.exceptions.AccountNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class MuteCommand implements SimpleCommand {
     public void helpMessage(CommandSource sender){

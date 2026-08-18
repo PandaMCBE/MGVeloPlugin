@@ -5,11 +5,13 @@ fr\pandamcbe\mgbungee\commands\general\RulesCmd.class
 fr\pandamcbe\mgbungee\Main.class
 velocity-plugin.json
 fr\pandamcbe\mgbungee\tasks\PubliciteTask.class
+fr\pandamcbe\mgbungee\commands\general\HubCommands.class
 fr\pandamcbe\mgbungee\redisstuff\RedisPbSb.class
 fr\pandamcbe\mgbungee\commands\penalities\BanIpCommand.class
 fr\pandamcbe\mgbungee\commands\penalities\BanCommand.class
 fr\pandamcbe\mgbungee\listeners\BungeeListener.class
 fr\pandamcbe\mgbungee\tasks\SavingDatas.class
+fr\pandamcbe\mgbungee\commands\general\StatsCommand.class
 fr\pandamcbe\mgbungee\redisstuff\MuteManager.class
 fr\pandamcbe\mgbungee\commands\penalities\UnMuteCommand.class
 fr\pandamcbe\mgbungee\commands\privatemessage\MsgCommand.class

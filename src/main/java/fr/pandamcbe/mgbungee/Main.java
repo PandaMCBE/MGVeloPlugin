@@ -13,7 +13,9 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import fr.pandamcbe.mgbungee.commands.general.HubCommands;
 import fr.pandamcbe.mgbungee.commands.general.RulesCmd;
+import fr.pandamcbe.mgbungee.commands.general.StatsCommand;
 import fr.pandamcbe.mgbungee.commands.penalities.*;
 import fr.pandamcbe.mgbungee.commands.privatemessage.MsgCommand;
 import fr.pandamcbe.mgbungee.commands.privatemessage.MsgRCommand;
@@ -31,7 +33,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 @Plugin(id = "mgnungee", name = "MGBungee", version = "1.0",
@@ -43,7 +44,6 @@ public final class Main{
     public static Main INSTANCE;
 
     public static Map<Player, Player> message = new HashMap<Player, Player>();
-    public Set<String> serverNames;
 
     public PubliciteTask task;
 //    public AccountProvider accountProvider;
@@ -102,6 +102,7 @@ public final class Main{
         CommandMeta msgRMeta = commandManager.metaBuilder("msgR").aliases("r", "respond").plugin(this).build();
         CommandMeta rulesMeta = commandManager.metaBuilder("rules").aliases("rl", "règles", "rgl").plugin(this).build();
         CommandMeta hubMeta = commandManager.metaBuilder("hub").aliases("lobby", "spawn").plugin(this).build();
+        CommandMeta statsMeta = commandManager.metaBuilder("stats").aliases( "sts").plugin(this).build();
         SimpleCommand banCmd = new BanCommand();
         SimpleCommand banIpCmd = new BanIpCommand();
         SimpleCommand unbanCmd = new UnBanCommand();
@@ -110,9 +111,9 @@ public final class Main{
         SimpleCommand unmuteCmd = new UnMuteCommand();
         SimpleCommand msgCmd = new MsgCommand();
         SimpleCommand msgRCmd = new MsgRCommand();
+        SimpleCommand statsCmd = new StatsCommand();
         RawCommand rulesCmd = new RulesCmd();
-//        RawCommand hubCmd = new HubCommands();
-
+        RawCommand hubCmd = new HubCommands();
         commandManager.register(banMeta, banCmd);
         commandManager.register(banIpMeta, banIpCmd);
         commandManager.register(unbanMeta, unbanCmd);
@@ -122,7 +123,8 @@ public final class Main{
         commandManager.register(msgMeta, msgCmd);
         commandManager.register(msgRMeta, msgRCmd);
         commandManager.register(rulesMeta, rulesCmd);
-//        commandManager.register(hubMeta, hubCmd);
+        commandManager.register(hubMeta, hubCmd);
+        commandManager.register(statsMeta, statsCmd);
     }
 
     public static Main getINSTANCE() {
