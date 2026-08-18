@@ -38,7 +38,7 @@ public class HubCommands implements RawCommand {
     }
 
     @Override
-    public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("");
+    public boolean hasPermission(Invocation invocation) {
+        return RawCommand.super.hasPermission(invocation);
     }
 }
