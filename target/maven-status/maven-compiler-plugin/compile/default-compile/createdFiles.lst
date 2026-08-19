@@ -20,6 +20,5 @@ fr\pandamcbe\mgbungee\commands\penalities\UnBanIpCommand.class
 fr\pandamcbe\mgbungee\commands\privatemessage\MsgRCommand.class
 fr\pandamcbe\mgbungee\redisstuff\LoadRedisAccounts.class
 fr\pandamcbe\mgbungee\NetworkState.class
-fr\pandamcbe\mgbungee\redisstuff\RedisPbSb$1.class
 fr\pandamcbe\mgbungee\mysql\FriendsTable.class
 fr\pandamcbe\mgbungee\commands\penalities\MuteCommand.class

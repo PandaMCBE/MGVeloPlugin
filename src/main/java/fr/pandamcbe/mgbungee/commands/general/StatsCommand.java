@@ -42,7 +42,8 @@ public class StatsCommand implements SimpleCommand {
                 if (verifyName(serverName)) {
                     if (args.length == 2) {
                         StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(player.getUniqueId(), AccountType.statsKey(serverName));
-                        player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + args[1] + " a actuellement au " + serverName + "</white>: <yellow>" + statsAccount.getCoins() + "</yellow> <gold>MGCoins</gold> <dark_purple>" + statsAccount.getElos() + " MGElos</dark_purple> <red>" + statsAccount.getKills() + " MGKills</red> <green>" + statsAccount.getKillstreaks() + " MGKillStreaks</green> <aqua>" + statsAccount.getWins() + " MGWins</aqua>"));
+                        ProfilAccount profilAccount = (ProfilAccount) redisAccountsManager.getProfilAccount(player.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
+                        player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + args[1] + " a actuellement au " + serverName + "</white>: <yellow>" + profilAccount.getCoins() + "</yellow> <gold>MGCoins</gold> <dark_purple>" + statsAccount.getElos() + " MGElos</dark_purple> <red>" + statsAccount.getKills() + " MGKills</red> <green>" + statsAccount.getKillstreaks() + " MGKillStreaks</green> <aqua>" + statsAccount.getWins() + " MGWins</aqua>"));
                     } else if (args.length < 2) {
                         player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <red>/stats [serverName] [playerName] [stat(coins, elos...)] [add/remove] [amount]</red>"));
                     }

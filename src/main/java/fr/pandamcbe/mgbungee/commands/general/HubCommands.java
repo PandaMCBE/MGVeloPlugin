@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import fr.pandamcbe.mgbungee.Main;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
+import fr.pandamcbe.mymgsql.data.management.redis.RedisMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +21,14 @@ public class HubCommands implements RawCommand {
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
         Player player = (Player) source;
-        if (!player.getCurrentServer().get().getServerInfo().getName().equalsIgnoreCase(AllNames.LOBBY.getName())) {
-            Optional<RegisteredServer> server = proxyServer.getServer(AllNames.LOBBY.getName());
-            server.ifPresent(targetServer -> player.createConnectionRequest(targetServer).connect());
+        if(player.getCurrentServer().isPresent()) {
+            if (player.getCurrentServer().get().getServerInfo().getName().equalsIgnoreCase(AllNames.LOBBY.getName())) {
+                Main.getINSTANCE().redisPbSb.publishMessage(AllNames.TELEPORTSPAWN.getName(), new RedisMessage(player.getUniqueId()));
+            } else {
+                Optional<RegisteredServer> server = proxyServer.getServer(AllNames.LOBBY.getName());
+                server.ifPresent(targetServer -> player.createConnectionRequest(targetServer).connect());
+            }
         }
-
     }
 
     @Override
