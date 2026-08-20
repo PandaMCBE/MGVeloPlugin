@@ -70,7 +70,7 @@ public final class Main{
         // For instance, we could register an event:
         CommandsInitialization();
         redisPbSb = new RedisPbSb();
-        redisPbSb.SubToChannels();
+        redisPbSb.subChannels();
         networkState = new NetworkState();
         MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List",MyMGSql.getInstance().getOnlineServerNames(), Duration.ZERO);
         networkState.setServerNames(MyMGSql.getInstance().getOnlineServerNames());

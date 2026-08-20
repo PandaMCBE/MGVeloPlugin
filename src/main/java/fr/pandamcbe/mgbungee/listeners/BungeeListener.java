@@ -55,8 +55,6 @@ public class BungeeListener {
         if(networkState.getServersPlayerCount().isEmpty()) {
             Main.getINSTANCE().getOnlineServersPlayersCount();
         }
-
-        Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
     }
 
     @Subscribe
@@ -66,14 +64,14 @@ public class BungeeListener {
         Map<String, Integer> map = networkState.getServersPlayerCount();
 
         String targetName = targetServer.getServerInfo().getName();
-        Integer targetCount = targetServer.getPlayersConnected().size();
-        map.put(targetName, targetCount);
+        int targetCount = targetServer.getPlayersConnected().size();
+        map.put(targetName, targetCount + 1);
 
         if(event.getPreviousServer().isPresent()) {
             RegisteredServer previousServer = event.getPreviousServer().get();
             String previousName = previousServer.getServerInfo().getName();
-            Integer previousCount = previousServer.getPlayersConnected().size();
-            map.put(previousName, previousCount);
+            int previousCount = previousServer.getPlayersConnected().size();
+            map.put(previousName, previousCount - 1);
         }
 
         Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
