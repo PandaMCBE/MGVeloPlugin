@@ -1,5 +1,6 @@
 package fr.pandamcbe.mgbungee.commands.general;
 
+import com.google.gson.Gson;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
@@ -20,6 +21,7 @@ public class StatsCommand implements SimpleCommand {
 
     private final RedisAccountsManager redisAccountsManager = new RedisAccountsManager();
     private final RedisPbSb redisPbSb = new RedisPbSb();
+    private final Gson gson = new Gson();
 
     private boolean verifyName(String serverName){
         for(String s : Main.getINSTANCE().networkState.getServerNames()){
@@ -43,21 +45,27 @@ public class StatsCommand implements SimpleCommand {
             if (args.length > 0) {
                 final String serverName = args[0];
                 if (verifyName(serverName)) {
-                    if (args.length == 2) {
-                        StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(player.getUniqueId(), AccountType.statsKey(serverName));
-                        ProfilAccount profilAccount = (ProfilAccount) redisAccountsManager.getProfilAccount(player.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
-                        player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + args[1] + " a actuellement au " + serverName + "</white>: <yellow>" + profilAccount.getCoins() + "</yellow> <gold>MGCoins</gold> <dark_purple>" + statsAccount.getElos() + " MGElos</dark_purple> <red>" + statsAccount.getKills() + " MGKills</red> <green>" + statsAccount.getKillstreaks() + " MGKillStreaks</green> <aqua>" + statsAccount.getWins() + " MGWins</aqua>"));
-                    } else if (args.length < 2) {
+                    if (args.length < 2) {
                         player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <red>/stats [serverName] [playerName] [stat(coins, elos...)] [add/remove] [amount]</red>"));
                     }
-                    if (args.length >= 4) {
+                    if(args.length > 1) {
                         if (proxyServer.getPlayer(args[1]).isPresent()) {
                             Player target = proxyServer.getPlayer(args[1]).get();
-                            editCoins(args, player, target);
-                            editElos(args, player, target, serverName);
-                            editKills(args, player, target, serverName);
-                            editWins(args, player, target, serverName);
-                            editKillStreaks(args, player, target, serverName);
+                            if (args.length == 2) {
+                                StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
+                                ProfilAccount profilAccount = (ProfilAccount) redisAccountsManager.getProfilAccount(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix());
+                                player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + args[1] + " a actuellement au " + serverName + "</white>: <yellow>" + profilAccount.getCoins() + "</yellow> <gold>MGCoins</gold> <dark_purple>" + statsAccount.getElos() + " MGElos</dark_purple> <red>" + statsAccount.getKills() + " MGKills</red> <green>" + statsAccount.getKillstreaks() + " MGKillStreaks</green> <aqua>" + statsAccount.getWins() + " MGWins</aqua>"));
+                            } else if (args.length >= 4) {
+                                if (proxyServer.getPlayer(args[1]).isPresent()) {
+                                    editCoins(args, player, target);
+                                    editElos(args, player, target, serverName);
+                                    editKills(args, player, target, serverName);
+                                    editWins(args, player, target, serverName);
+                                    editKillStreaks(args, player, target, serverName);
+                                }
+                            }
+                        } else {
+                            player.sendMessage(Main.mm("<red> Le joueur en question est introuvable.</red>"));
                         }
                     }
                 } else {
@@ -90,7 +98,7 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix(), profilAccount);
-            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), profilAccount));
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(AccountType.PROFIL.getKeyPrefix(), target.getUniqueId(), gson.toJson(profilAccount)));
         }
     }
 
@@ -114,7 +122,7 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
-            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(AccountType.statsKey(serverName), target.getUniqueId(), gson.toJson(statsAccount)));
         }
     }
 
@@ -139,7 +147,7 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
-            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(AccountType.statsKey(serverName), target.getUniqueId(), gson.toJson(statsAccount)));
 
         }
     }
@@ -164,7 +172,7 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
-            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(AccountType.statsKey(serverName), target.getUniqueId(), gson.toJson(statsAccount)));
 
         }
     }
@@ -190,7 +198,7 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
-            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(AccountType.statsKey(serverName), target.getUniqueId(), gson.toJson(statsAccount)));
 
         }
     }
