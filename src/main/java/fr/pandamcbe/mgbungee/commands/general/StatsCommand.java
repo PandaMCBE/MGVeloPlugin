@@ -7,9 +7,11 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import fr.pandamcbe.commons.ProfilAccount;
 import fr.pandamcbe.commons.StatsAccount;
 import fr.pandamcbe.mgbungee.Main;
+import fr.pandamcbe.mgbungee.redisstuff.RedisPbSb;
 import fr.pandamcbe.mymgsql.core.rediscache.RedisAccountsManager;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AccountType;
 import fr.pandamcbe.mymgsql.data.management.enums_strings.AllNames;
+import fr.pandamcbe.mymgsql.data.management.redis.RedisMessage;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 public class StatsCommand implements SimpleCommand {
 
     private final RedisAccountsManager redisAccountsManager = new RedisAccountsManager();
+    private final RedisPbSb redisPbSb = new RedisPbSb();
 
     private boolean verifyName(String serverName){
         for(String s : Main.getINSTANCE().networkState.getServerNames()){
@@ -50,13 +53,11 @@ public class StatsCommand implements SimpleCommand {
                     if (args.length >= 4) {
                         if (proxyServer.getPlayer(args[1]).isPresent()) {
                             Player target = proxyServer.getPlayer(args[1]).get();
-                            StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
                             editCoins(args, player, target);
-                            editElos(args, player, target, statsAccount);
-                            editKills(args, player, target, statsAccount);
-                            editWins(args, player, target, statsAccount);
-                            editKillStreaks(args, player, target, statsAccount);
-                            redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
+                            editElos(args, player, target, serverName);
+                            editKills(args, player, target, serverName);
+                            editWins(args, player, target, serverName);
+                            editKillStreaks(args, player, target, serverName);
                         }
                     }
                 } else {
@@ -89,18 +90,19 @@ public class StatsCommand implements SimpleCommand {
                 }
             }
             redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.PROFIL.getKeyPrefix(), profilAccount);
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), profilAccount));
         }
     }
 
-    public void editElos(String[] args, Player player, Player target, StatsAccount statsAccount) {
+    public void editElos(String[] args, Player player, Player target, String serverName) {
         if (args[2].equalsIgnoreCase("elos")) {
+            StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
             if (args[3].equalsIgnoreCase("add")) {
                 if (args.length == 5) {
 
                     int amount = Integer.parseInt(args[4]);
                     statsAccount.setElos(statsAccount.getElos() + amount);
                     player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + target.getUsername() + "a reçu </white><yellow>" + amount + "</yellow> <dark_purple>MGElos</dark_purple>"));
-
 
                 }
 
@@ -111,17 +113,20 @@ public class StatsCommand implements SimpleCommand {
                     player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + target.getUsername() + " a perdu </white><yellow>" + amount + " </yellow><dark_purple>MGElos</dark_purple>"));
                 }
             }
+            redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
         }
     }
 
-    public void editKills(String[] args, Player player, Player target, StatsAccount statsAccount) {
+    public void editKills(String[] args, Player player, Player target, String serverName) {
         if (args[2].equalsIgnoreCase("kills")) {
+            StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
+
             if (args[3].equalsIgnoreCase("add")) {
                 if (args.length == 5) {
                     int amount = Integer.parseInt(args[4]);
                     statsAccount.setKills(statsAccount.getKills() + amount);
                     player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + target.getUsername() + "a reçu </white><yellow>" + amount + "</yellow> <red>MGKills</red>"));
-
 
                 }
 
@@ -133,11 +138,16 @@ public class StatsCommand implements SimpleCommand {
 
                 }
             }
+            redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+
         }
     }
 
-    public void editWins(String[] args, Player player, Player target, StatsAccount statsAccount){
+    public void editWins(String[] args, Player player, Player target, String serverName){
         if (args[2].equalsIgnoreCase("wins")) {
+            StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
+
             if (args[3].equalsIgnoreCase("add")) {
                 if (args.length == 5) {
                     int amount = Integer.parseInt(args[4]);
@@ -151,20 +161,23 @@ public class StatsCommand implements SimpleCommand {
                     int amount = Integer.parseInt(args[4]);
                     statsAccount.setWins(statsAccount.getWins() - amount);
                     player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + target.getUsername() + " a perdu </white><yellow>" + amount + " </yellow><aqua>MGWins</aqua>"));
-
                 }
             }
+            redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+
         }
     }
 
-    public void editKillStreaks(String[] args, Player player, Player target, StatsAccount statsAccount) {
+    public void editKillStreaks(String[] args, Player player, Player target, String serverName) {
         if (args[2].equalsIgnoreCase("killstreaks")) {
+            StatsAccount statsAccount = (StatsAccount) redisAccountsManager.getStatsAccount(target.getUniqueId(), AccountType.statsKey(serverName));
+
             if (args[3].equalsIgnoreCase("add")) {
                 if (args.length == 5) {
                     int amount = Integer.parseInt(args[4]);
                     statsAccount.setKillstreaks(statsAccount.getKillstreaks() + amount);
                     player.sendMessage(Main.mm("<aqua><b>MG-Land></b></aqua> <white>" + target.getUsername() + "a reçu </white><yellow>" + amount + "</yellow> <green>MGKillstreaks</green>"));
-
 
                 }
 
@@ -176,6 +189,9 @@ public class StatsCommand implements SimpleCommand {
 
                 }
             }
+            redisAccountsManager.sendAccountToRedisType(target.getUniqueId(), AccountType.statsKey(serverName), statsAccount);
+            redisPbSb.publishMessage(AllNames.STATSCOMMAND.getName(), new RedisMessage(target.getUniqueId(), statsAccount));
+
         }
     }
 

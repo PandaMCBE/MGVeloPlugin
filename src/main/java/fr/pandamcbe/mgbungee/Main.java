@@ -72,7 +72,7 @@ public final class Main{
         redisPbSb = new RedisPbSb();
         redisPbSb.SubToChannels();
         networkState = new NetworkState();
-        MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List",MyMGSql.getInstance().getOnlineServerNames() , Duration.ZERO);
+        MyMGSql.getInstance().redisInteractionManager.sendRSetToRedis("ServerNames-List",MyMGSql.getInstance().getOnlineServerNames(), Duration.ZERO);
         networkState.setServerNames(MyMGSql.getInstance().getOnlineServerNames());
         redisMuteManager = new MuteManager();
         savingDatas.saveIntoSql();
