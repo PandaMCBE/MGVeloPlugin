@@ -71,7 +71,7 @@ public class BungeeListener {
             RegisteredServer previousServer = event.getPreviousServer().get();
             String previousName = previousServer.getServerInfo().getName();
             int previousCount = previousServer.getPlayersConnected().size();
-            map.put(previousName, previousCount - 1);
+            map.put(previousName, (previousCount > 1) ? previousCount - 1 : previousCount);
         }
 
         Main.getINSTANCE().redisPbSb.publishMessage(AllNames.NETWORKSTATE.getName(), networkState);
